@@ -363,6 +363,7 @@ if __name__ == '__main__':
 	print(players.getPlayers())
 	print(players.getDealer())
 	dealer = players.getDealer()
+	# TODO If dealer has 21 then all players besides those with 21 lose (check for 21 in the dealer then the ohers)
 	for p in list(players.players()):
 		while basicStrategy(players.getPlayHand(p), dealer['faceCard']):
 			players.hit(p)
