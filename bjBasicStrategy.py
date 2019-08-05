@@ -116,7 +116,8 @@ class Participant(object):
 		self.playDeck = Deck(deckNum)
 		self.dealer = {
 			'hand': [],
-			'wins': 0
+			'wins': 0,
+			'faceCard': 0
 		}
 		self.participants = {}
 		player = {
@@ -126,7 +127,6 @@ class Participant(object):
 		for i in range(1, participants+1):
 			playerNum = "P"+str(i)
 			self.participants[playerNum] = player.copy()
-		self.dealerFaceCard = 0
 
 	def getDeckAtrributes(self):
 		return {
@@ -145,6 +145,12 @@ class Participant(object):
 		Returns the players and their hands
 		'''
 		return self.participants.copy()
+
+	def getPlayHand(self, player):
+		'''
+		Returns the hand value for a specific player
+		'''
+		return self.participants[player]['hand']
 
 	def getDealer(self):
 		return self.dealer.copy()
@@ -176,7 +182,7 @@ class Participant(object):
 		card = self.playDeck.draw()
 		value = self.cardVal(card)
 		self.dealer['hand'] = value
-		self.dealerFaceCard = value
+		self.dealer['faceCard'] = value.copy()
 
 		# Second Round of Cards
 		participants = list(self.participants.keys())
@@ -207,7 +213,7 @@ class Participant(object):
 
 	def checkBust(self, player):
 		'''
-		This function checks if the player has busted, returns a boolean
+		This function checks if the player has busted, returns True if busted
 		'''
 		if player[0] == "P":
 			Hand = self.participants[player]['hand']
@@ -272,19 +278,31 @@ class Participant(object):
 		
 		self.dealer['hand'] = dealerHand.copy()
 
-	def basicStrategy(phand, dealerFace):
+	def playerWins(self, player):
 		'''
-		TODO
-		This function will take in the player hand and the Dealer's face up card to determine if player should hit, double down or stand
+		This function adds wins to a players profile
 		'''
-		# Should function distinguish between hit and DD
-		# Use hand len to det if ace (if 2 values then there's an ace)
-		pass
+		self.participants[player]['wins'] = self.participants[player]['wins'] + 1 
+
+
+
+
+def basicStrategy(phand, dealerFace):
+	'''
+	TODO
+	This function will take in the player hand and the Dealer's face up card to determine if player should hit, double down or stand
+	'''
+	# Should function distinguish between hit and DD
+	# Use hand len to det if ace (if 2 values then there's an ace)
+	if phand[0] < 17:
+		return True
+	else:
+		False
 
 
 
 if __name__ == '__main__':
-	part = Participant(2,3)
+	# part = Participant(2,3)
 
 	# TEST Setting up the participants
 	# print(part.getPlayers())
@@ -301,9 +319,9 @@ if __name__ == '__main__':
 	# print(part.getPlayers())
 
 	# TEST drawing a hand
-	part.drawHandsAll()
-	print("Players hands", part.getPlayers())
-	print("Dealer Hand", part.getDealer())
+	# part.drawHandsAll()
+	# print("Players hands", part.getPlayers())
+	# print("Dealer Hand", part.getDealer())
 
 	# TEST Dealer hitting until bust or 17
 	# part.dealerHit()
@@ -320,14 +338,14 @@ if __name__ == '__main__':
 	# 	print("Bust on second hit")
 
 	# TEST Hitting until bust
-	for p in list(part.players()):
-		while not(part.checkBust(p)):
-			part.hit(p)
-		print(part.getDeckAtrributes())
+	# for p in list(part.players()):
+	# 	while not(part.checkBust(p)):
+	# 		part.hit(p)
+	# 	print(part.getDeckAtrributes())
 
 
 	# print("Bust on: ", testHit)
-	print("Players hands post hit", part.getPlayers())
+	# print("Players hands post hit", part.getPlayers())
 
 	# TODO Implement game
 	'''
@@ -339,5 +357,29 @@ if __name__ == '__main__':
 		If the player hand is > than dealer AND not over 21, 1 win
 		If 21 player wins the hand TODO check if this applies post hit or on draw
 	'''
+
+	players = Participant(2,3)
+	players.drawHandsAll()
+	print(players.getPlayers())
+	print(players.getDealer())
+	dealer = players.getDealer()
+	for p in list(players.players()):
+		while basicStrategy(players.getPlayHand(p), dealer['faceCard']):
+			players.hit(p)
+		print(players.getDeckAtrributes())
+	players.dealerHit()
+	dealer = players.getDealer()
+	for p in list(players.players()):
+		if players.checkBust('dealer') and not players.checkBust(p):
+			players.playerWins(p)
+		elif not players.checkBust(p) and players.getPlayHand(p)[0] > dealer['hand'][0]:
+			print(players.getPlayHand(p)[0])
+			print(dealer['hand'][0])
+			players.playerWins(p)	  
+	print(players.getPlayers())
+	print(players.getDealer())
+
+
+
 
 	print('\nProgram ran in {} seconds'.format(time.time()-start_time))
