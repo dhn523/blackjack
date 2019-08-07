@@ -122,7 +122,9 @@ class Participant(object):
 		self.participants = {}
 		player = {
 			'wins': 0,
-			'hand': []
+			'loses': 0,
+			'hand': [],
+			'DD': 0
 		}
 		for i in range(1, participants+1):
 			playerNum = "P"+str(i)
@@ -221,7 +223,6 @@ class Participant(object):
 			Hand = self.dealer['hand']
 		
 		if Hand[0] > 21:
-			print("BUST")
 			return True
 		else:
 			return False
@@ -246,6 +247,12 @@ class Participant(object):
 			playerHand[0] = playerHand[0] + cardVal[0]
 
 		self.participants[player]['hand'] = playerHand.copy()
+
+	def doubleDown(self, player, double=0):
+		'''
+		This function returns nothing but switches the double down ind, default is to reset
+		'''
+		self.participants[player]['DD'] = double
 
 	def dealerHit(self):
 		'''
@@ -272,37 +279,100 @@ class Participant(object):
 				card = self.playDeck.draw()
 				print("Hit card: ",card)
 				cardVal = card[1]
-			if cardVal > 10:
-				cardVal = 10
-			dealerHand[0] = dealerHand[0] + cardVal			
+				if cardVal > 10:
+					cardVal = 10
+				dealerHand[0] = dealerHand[0] + cardVal			
 		
 		self.dealer['hand'] = dealerHand.copy()
 
-	def playerWins(self, player):
+	def blackJack(self):
 		'''
-		This function adds wins to a players profile
+		This function returns true if the Dealer hit blackjack
+		Also adds wins to any other players who have blackjack
 		'''
-		self.participants[player]['wins'] = self.participants[player]['wins'] + 1 
+		if len(self.dealer['hand']) == 2 and self.dealer['hand'][1] == 21:
+			for p in list(self.participants.keys()):
+				if len(self.participants[p]['hand']) == 2 and self.participants[p]['hand'][1] == 21:
+					self.participants[p]['wins'] = self.participants[p]['wins'] + 1
+				else:
+					self.participants[p]['loses'] = self.participants[p]['loses'] + 1
+			return True
+		else:
+			return False
+
+	def playerWins(self, player, wl):
+		'''
+		This function adds win or loss to a players profile
+		'''
+		if wl == 'w':
+			self.participants[player]['wins'] = self.participants[player]['wins'] + 1
+		elif wl == 'l':
+			self.participants[player]['loses'] = self.participants[player]['loses'] + 1
+		elif wl == 'd':
+			self.dealer['wins'] = self.dealer['wins'] + 1 
 
 
 
 
-def basicStrategy(phand, dealerFace):
+
+def basicStrategy(phand, dealerFace, player):
 	'''
 	TODO
-	This function will take in the player hand and the Dealer's face up card to determine if player should hit, double down or stand
+	This function will take in the player hand and the Dealer's face up card to determine if player should hit (True), double down or stand
 	'''
 	# Should function distinguish between hit and DD
 	# Use hand len to det if ace (if 2 values then there's an ace)
-	if phand[0] < 17:
-		return True
+
+	dealerFace = dealerFace[0]
+	# Handling soft hands
+	if len(phand) > 1:
+		if phand[0] > 8:
+			return 'S'
+		elif dealerFace > 6 or dealerFace == 1:
+			if phand[0] == 8 and (dealerFace==7 or dealerFace==8):
+				return 'S'
+			else:
+				return 'H'
+		elif dealerFace == 2:
+			if phand[0]==8:
+				return 'S'
+			else:
+				return 'H'
+		elif (dealerFace==3 and phand[0] in range(3,7)) or (dealerFace==4 and phand[0] in range(3,5)):
+			return 'H'
+		else:
+			return 'D'
+
+	
+	if phand[0] < 9:
+		return 'H'
+	elif phand[0] > 16:
+		return 'S'
+	elif (dealerFace > 6 or dealerFace == 1) and phand[0] > 11:
+		return 'H'
+	elif (dealerFace < 7 and dealerFace != 1) and phand[0] > 11:
+		if dealerFace < 4 and phand[0] == 12:
+			return 'H'
+		else:
+			return 'S'
+	elif dealerFace == 1:
+		return 'H'
+	elif (phand[0]==9 and (dealerFace==2 or dealerFace>6)) or (phand[0]==10 and dealerFace==10):
+		return 'H'
 	else:
-		False
+		return 'D'
+
+
+
+
 
 
 
 if __name__ == '__main__':
-	# part = Participant(2,3)
+	part = Participant(4,3)
+
+	TEST_PARTICIPANTS = {'P1': {'wins': 0, 'hand': [11, 21], 'loses': 0}, 'P2': {'wins': 0, 'hand': [5], 'loses': 0}, 'P3': {'wins': 0, 'hand': [17], 'loses': 0}}
+	TEST_DEALER = {'hand': [13, 23], 'wins': 0, 'faceCard': [0]}
 
 	# TEST Setting up the participants
 	# print(part.getPlayers())
@@ -324,6 +394,8 @@ if __name__ == '__main__':
 	# print("Dealer Hand", part.getDealer())
 
 	# TEST Dealer hitting until bust or 17
+	# TEST_DEALER = {'hand': [13, 23], 'wins': 0, 'faceCard': [0]}
+	# part.dealer = TEST_DEALER
 	# part.dealerHit()
 	# print("Dealer hand post hit", part.getDealer())
 
@@ -347,6 +419,18 @@ if __name__ == '__main__':
 	# print("Bust on: ", testHit)
 	# print("Players hands post hit", part.getPlayers())
 
+	# TEST BlackJack Win function
+	TEST_PARTICIPANTS = {'P1': {'wins': 0, 'hand': [11, 21], 'loses': 0}, 'P2': {'wins': 0, 'hand': [5], 'loses': 0}, 'P3': {'wins': 0, 'hand': [17], 'loses': 0}}
+	TEST_DEALER = {'hand': [11, 21], 'wins': 0, 'faceCard': 0}
+	# part.participants = TEST_PARTICIPANTS
+	# part.dealer = TEST_DEALER
+	# print(part.getPlayers())
+	# print(part.getDealer())
+	# part.blackJack()
+	# print(part.getPlayers())
+	# print(part.getDealer())
+
+
 	# TODO Implement game
 	'''
 	Draw cards for everyone
@@ -357,28 +441,33 @@ if __name__ == '__main__':
 		If the player hand is > than dealer AND not over 21, 1 win
 		If 21 player wins the hand TODO check if this applies post hit or on draw
 	'''
-
 	players = Participant(2,3)
-	players.drawHandsAll()
-	print(players.getPlayers())
-	print(players.getDealer())
-	dealer = players.getDealer()
-	# TODO If dealer has 21 then all players besides those with 21 lose (check for 21 in the dealer then the ohers)
-	for p in list(players.players()):
-		while basicStrategy(players.getPlayHand(p), dealer['faceCard']):
-			players.hit(p)
-		print(players.getDeckAtrributes())
-	players.dealerHit()
-	dealer = players.getDealer()
-	for p in list(players.players()):
-		if players.checkBust('dealer') and not players.checkBust(p):
-			players.playerWins(p)
-		elif not players.checkBust(p) and players.getPlayHand(p)[0] > dealer['hand'][0]:
-			print(players.getPlayHand(p)[0])
-			print(dealer['hand'][0])
-			players.playerWins(p)	  
-	print(players.getPlayers())
-	print(players.getDealer())
+	for I in range(3):
+		players.drawHandsAll()
+		print(players.getPlayers())
+		print(players.getDealer())
+		dealer = players.getDealer()
+		if len(dealer['hand']) == 2 and dealer['hand'][1] == 21:
+			players.blackjack()
+			players.playerWins(p, 'd')
+		else:
+			for p in list(players.players()):
+				while basicStrategy(players.getPlayHand(p), dealer['faceCard'],p) in ['H', 'D']:
+					if basicStrategy(players.getPlayHand(p), dealer['faceCard'],p) == 'D':
+						players.doubleDown(p,1)
+					players.hit(p)
+			players.dealerHit()
+			dealer = players.getDealer()
+			for p in list(players.players()):
+				if players.checkBust('dealer') and not players.checkBust(p):
+					players.playerWins(p, 'w')
+				elif not players.checkBust(p) and players.getPlayHand(p)[0] > dealer['hand'][0]:
+					players.playerWins(p, 'w')
+				else:
+					players.playerWins(p, 'l')
+					players.playerWins(p, 'd')	  
+		print(players.getPlayers())
+		print(players.getDealer())
 
 
 
