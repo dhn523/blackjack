@@ -262,7 +262,8 @@ class Participant(object):
 		dealerHand = self.dealer['hand']
 
 		while dealerHand[len(dealerHand)-1] < 17:
-			card = self.playDeck.draw()
+			# card = self.playDeck.draw()
+			card = ('H', 1)
 			print("Hit card: ",card)
 			cardVal = card[1]
 			if cardVal > 10:
@@ -273,6 +274,9 @@ class Participant(object):
 				dealerHand[1] = dealerHand[1] + cardVal
 			else:
 				dealerHand[0] = dealerHand[0] + cardVal
+
+			if cardVal==1 and len(dealerHand) != 2:
+				dealerHand.append(dealerHand[0] + 10)
 
 		if len(dealerHand) == 2 and dealerHand[1] > 21:
 			while dealerHand[0] < 17:
@@ -306,6 +310,9 @@ class Participant(object):
 		'''
 		if wl == 'w':
 			self.participants[player]['wins'] = self.participants[player]['wins'] + 1
+			if self.participants[player]['DD'] == 1:
+				self.participants[player]['wins'] = self.participants[player]['wins'] + 1
+				self.doubleDown(player)
 		elif wl == 'l':
 			self.participants[player]['loses'] = self.participants[player]['loses'] + 1
 		elif wl == 'd':
@@ -394,7 +401,7 @@ if __name__ == '__main__':
 	# print("Dealer Hand", part.getDealer())
 
 	# TEST Dealer hitting until bust or 17
-	# TEST_DEALER = {'hand': [13, 23], 'wins': 0, 'faceCard': [0]}
+	# TEST_DEALER = {'hand': [9], 'wins': 0, 'faceCard': [2]}
 	# part.dealer = TEST_DEALER
 	# part.dealerHit()
 	# print("Dealer hand post hit", part.getDealer())
@@ -420,8 +427,8 @@ if __name__ == '__main__':
 	# print("Players hands post hit", part.getPlayers())
 
 	# TEST BlackJack Win function
-	TEST_PARTICIPANTS = {'P1': {'wins': 0, 'hand': [11, 21], 'loses': 0}, 'P2': {'wins': 0, 'hand': [5], 'loses': 0}, 'P3': {'wins': 0, 'hand': [17], 'loses': 0}}
-	TEST_DEALER = {'hand': [11, 21], 'wins': 0, 'faceCard': 0}
+	# TEST_PARTICIPANTS = {'P1': {'wins': 0, 'hand': [11, 21], 'loses': 0}, 'P2': {'wins': 0, 'hand': [5], 'loses': 0}, 'P3': {'wins': 0, 'hand': [17], 'loses': 0}}
+	# TEST_DEALER = {'hand': [11, 21], 'wins': 0, 'faceCard': 0}
 	# part.participants = TEST_PARTICIPANTS
 	# part.dealer = TEST_DEALER
 	# print(part.getPlayers())
