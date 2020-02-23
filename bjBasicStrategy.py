@@ -48,6 +48,34 @@ def plotCount(deckNum):
 	plt.show() 
 
 
+def fullPlot(players, count):
+	plt.figure(1)
+
+	plt.subplot(221)
+	plt.plot(range(len(players[0])),players[0])
+	plt.title('Player 1')
+	plt.grid(True)
+
+	plt.subplot(222)
+	plt.plot(range(len(players[1])),players[1])
+	plt.title('Player 2')
+	plt.grid(True)
+
+	plt.subplot(223)
+	plt.plot(range(len(players[2])),players[2])
+	plt.title('Player 3')
+	plt.grid(True)
+
+	plt.subplot(224)
+	plt.plot(range(len(count)), count)
+	plt.title('Count')
+	plt.grid(True)
+
+	plt.show()
+
+# fullPlot([[1,2,3,4], [5,6,7,8], [10,20,30,40]],[4,3,2,1])
+
+
 class Deck(object):
     def __init__(self, numDecks):
     	suits = ['H','S','C', 'D']
@@ -85,6 +113,9 @@ class Deck(object):
     	return self.count
 
     def getCount(self):
+    	'''
+    	Returns the count of the deck as an integer
+    	'''
     	return self.count
 
     def shuffle(self):
@@ -234,7 +265,7 @@ class Participant(object):
 		'''
 		playerHand = self.participants[player]['hand']
 		card = self.playDeck.draw()
-		print("Hit card: ",card)
+		# print("Hit card: ",card)
 		cardVal = self.cardVal(card)
 
 		if len(playerHand) == 2:
@@ -264,7 +295,7 @@ class Participant(object):
 		while dealerHand[len(dealerHand)-1] < 17:
 			# card = self.playDeck.draw()
 			card = ('H', 1)
-			print("Hit card: ",card)
+			# print("Hit card: ",card)
 			cardVal = card[1]
 			if cardVal > 10:
 				cardVal = 10
@@ -378,8 +409,8 @@ def basicStrategy(phand, dealerFace, player):
 if __name__ == '__main__':
 	part = Participant(4,3)
 
-	TEST_PARTICIPANTS = {'P1': {'wins': 0, 'hand': [11, 21], 'loses': 0}, 'P2': {'wins': 0, 'hand': [5], 'loses': 0}, 'P3': {'wins': 0, 'hand': [17], 'loses': 0}}
-	TEST_DEALER = {'hand': [13, 23], 'wins': 0, 'faceCard': [0]}
+	# TEST_PARTICIPANTS = {'P1': {'wins': 0, 'hand': [11, 21], 'loses': 0}, 'P2': {'wins': 0, 'hand': [5], 'loses': 0}, 'P3': {'wins': 0, 'hand': [17], 'loses': 0}}
+	# TEST_DEALER = {'hand': [13, 23], 'wins': 0, 'faceCard': [0]}
 
 	# TEST Setting up the participants
 	# print(part.getPlayers())
@@ -449,13 +480,17 @@ if __name__ == '__main__':
 		If 21 player wins the hand TODO check if this applies post hit or on draw
 	'''
 	players = Participant(2,3)
-	for I in range(3):
+	p1_WL = []
+	p2_WL = []
+	p3_WL = []
+	deckCount = []
+	for I in range(1000):
 		players.drawHandsAll()
-		print(players.getPlayers())
-		print(players.getDealer())
+		# print(players.getPlayers())
+		# print(players.getDealer())
 		dealer = players.getDealer()
 		if len(dealer['hand']) == 2 and dealer['hand'][1] == 21:
-			players.blackjack()
+			players.blackJack()
 			players.playerWins(p, 'd')
 		else:
 			for p in list(players.players()):
@@ -473,9 +508,56 @@ if __name__ == '__main__':
 				else:
 					players.playerWins(p, 'l')
 					players.playerWins(p, 'd')	  
-		print(players.getPlayers())
-		print(players.getDealer())
+		part = players.getPlayers()
+		deckAttributes = players.getDeckAtrributes()
+		# print(players.getPlayers())
+		# print(players.getDealer())
 
+		for P in list(part.keys()):
+			if P=="P1":
+				p1_WL.append(part[P]['wins'] - part[P]['loses'])
+			elif P=="P2":
+				p2_WL.append(part[P]['wins'] - part[P]['loses'])
+			elif P=="P3":
+				p3_WL.append(part[P]['wins'] - part[P]['loses'])
+		deckCount.append(deckAttributes['count'])
+
+		# print(list(part.keys()))
+		# print(deckAttributes)
+	# print(p1_WL,'|', p2_WL,'|', p3_WL)
+	# print(deckCount)
+
+	fullPlot([p1_WL, p2_WL, p3_WL], deckCount)
+	# TEST_PARTICIPANTS = {'P1': {'wins': 0, 'hand': [6], 'loses': 0, 'DD': 0}, 'P2': {'wins': 0, 'hand': [10], 'loses': 0, 'DD': 0}, 'P3': {'wins': 0, 'hand': [13], 'loses': 0, 'DD': 0}}
+	# TEST_DEALER = {'hand': [7], 'wins': 0, 'faceCard': [2]}
+
+	# players.drawHandsAll()
+	# players.participants = TEST_PARTICIPANTS
+	# players.dealer = TEST_DEALER
+	# print(players.getPlayers())
+	# print(players.getDealer())
+	# dealer = players.getDealer()
+	# if len(dealer['hand']) == 2 and dealer['hand'][1] == 21:
+	# 	players.blackjack()
+	# 	players.playerWins(p, 'd')
+	# else:
+	# 	for p in list(players.players()):
+	# 		while basicStrategy(players.getPlayHand(p), dealer['faceCard'],p) in ['H', 'D']:
+	# 			if basicStrategy(players.getPlayHand(p), dealer['faceCard'],p) == 'D':
+	# 				players.doubleDown(p,1)
+	# 			players.hit(p)
+	# 	players.dealerHit()
+	# 	dealer = players.getDealer()
+	# 	for p in list(players.players()):
+	# 		if players.checkBust('dealer') and not players.checkBust(p):
+	# 			players.playerWins(p, 'w')
+	# 		elif not players.checkBust(p) and players.getPlayHand(p)[0] > dealer['hand'][0]:
+	# 			players.playerWins(p, 'w')
+	# 		else:
+	# 			players.playerWins(p, 'l')
+	# 			players.playerWins(p, 'd')	  
+	# print(players.getPlayers())
+	# print(players.getDealer())
 
 
 
